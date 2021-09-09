@@ -1,11 +1,14 @@
 import os
 import shutil
+from tabulate import tabulate
 from distutils.dir_util import copy_tree
 
 
 class FileManager:
     def __init__(self):
         self.root_directory = "/home/noble6/File_manager_directory/"
+        self.directory_data = []
+        self.run_state = False
 
     def create_directory(self):
         directory_name = str(input("Directory name: "))
@@ -32,8 +35,16 @@ class FileManager:
 
     def list_directory(self):
         files = os.scandir(path=self.root_directory)
+        file_id = 1
         for each in files:
-            print(f'- Directory - {each.name}' if each.is_dir() else f'- File - {each.name}')
+            object_data = f' - Directory - {each.name} - {file_id}' if each.is_dir() else f' - File - {each.name} - {file_id}'
+            object_info = object_data.split(' - ')
+            object_info.pop(0)
+            self.directory_data.append(object_info)
+            file_id += 1
+        data = tabulate((i for i in self.directory_data), headers=['Type', 'Name', 'ID'], tablefmt='pipe', stralign='center')
+        self.directory_data = []
+        print(data)
 
     def list_stats(self):
         files = os.scandir(path=self.root_directory)
@@ -70,27 +81,34 @@ class FileManager:
 
     def copy_files(self):
         self.list_directory()
-        start_directory = f"{self.root_directory}/{str(input('Название директории из который производится копирование: '))}"
+        start_directory = f"{self.root_directory}/{str(input('Директория из который производится копирование: '))}"
         end_directory = f"{self.root_directory}/{str(input('Название новой директории, чтобы скопировать в неё: '))}"
         copy_tree(start_directory, end_directory)
 
+    def move_files(self):
+        self.list_directory()
+        # start_directory = f"{self.root_directory}/{str(input('Файл для перемещения: '))}"
+        # end_directory = f"{self.root_directory}/{str(input('П: '))}"
+
+    def CLI(self):
+        print('Файловый менеджер\n')
+        commands = [['1', 'Просмотр директории'], ['2', 'Создать папку']]
+        help_page = tabulate((i for i in commands), headers=['ID', 'Метод'], tablefmt='grid', stralign='center')
+        print(help_page)
+        while True:
+            choose = str(input('\nВведите ID команды чтобы продолжить: '))
+            print('\n')
+            if choose == '1':
+                self.list_directory()
+            if choose == 'help':
+                print(f'\n{help_page}')
+            if choose.lower() == 'exit':
+                exit()
 
 
 def main():
     manager = FileManager()
-    # manager.create_directory()
-    # manager.list_directory()
-    # manager.list_directory()
-    # manager.list_stats()
-    # manager.delete_directory()
-    # manager.create_file()
-    # manager.read_file()
-    # manager.move_between_directories()
-    # manager.list_directory()
-    # manager.move_up()
-    # manager.list_directory()
-    # manager.rename_file()
-    manager.copy_files()
+    manager.CLI()
 
 
 if __name__ == '__main__':
