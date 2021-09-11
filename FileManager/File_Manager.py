@@ -6,9 +6,9 @@ from distutils.dir_util import copy_tree
 
 class FileManager:
     def __init__(self):
-        self.root_directory = "/home/noble6/File_manager_directory/"
+        self.root_directory = "/home/noble6/File_manager_directory"
         self.display_data = []
-        self.allowed_files = self.list_directory()[1]  # ID файлов в разрешенной для изменения директории
+        self.allowed_files = self.list_directory()[1]  # Объекты в разрешенной для изменения директории
 
     def create_directory(self):
         directory_name = str(input("Название новой директории: "))
@@ -19,17 +19,20 @@ class FileManager:
             print("Директория уже существует")
 
     def create_file(self):
-        file_name = str(input("File name: "))
+        file_name = str(input("Имя файла: "))
         new_file = open(f"{self.root_directory}/{file_name}", "w")
-        new_file.write(str(input()))
+        new_file.write(str(input('Введите текст для записи в файл: ')))
         new_file.close()
 
     def read_file(self):
+        file_id = int(input('Введите ID файла чтобы прочитать: '))
+        location = self.id_choice(file_id)
         try:
-            file_location = f"{self.root_directory}/{str(input('Введите название файла чтобы прочитать: '))}"
-            with open(f"{file_location}.txt", "r") as f:
-                text = f.readlines()
-                print(text)
+            file_location = f"{self.root_directory}/{location}"
+            with open(file_location, "r") as f:
+                text = f.read()
+            for line in text.splitlines():
+                print(line)
         except FileNotFoundError:
             print("Файл не найден")
 
@@ -53,19 +56,17 @@ class FileManager:
             print(os.stat(each))
 
     def delete_directory(self):
-        directory = str(input('Введите ID директории чтобы удалить: '))
+        directory_id = int(input('Введите ID директории чтобы удалить: '))
+        location = self.id_choice(directory_id)
         try:
-            os.rmdir(f'{self.root_directory}/{directory}')
+            os.rmdir(f'{self.root_directory}/{location}')
         except OSError as e:
             print(f'Error: {e.filename} - {e.strerror}')
 
-    def move_between_directories(self):  # Переместиться по директориям
-        directories = os.scandir(path=self.root_directory)
-        for each in directories:
-            if each.is_dir():
-                print(f'- Directory - {each.name}')
-        chosen_directory = str(input('Type Directory Name: '))
-        self.root_directory += f'{chosen_directory}'
+    def move_between_directories(self):  # Перемещение по разрешенным директориям
+        chosen_directory = int(input('Введите ID директории чтобы переместиться: '))
+        location = self.id_choice(chosen_directory)
+        self.root_directory += f'{location}'
 
     def move_up(self):  # Подняться вверх по директории
         location = self.root_directory.split('/')
@@ -92,12 +93,16 @@ class FileManager:
         end_directory = f"{self.root_directory}/{str(input('В какую директорию переместить: '))}"
         shutil.move(start_file, end_directory)
 
-    def id_choice(self):
-        pass
+    def id_choice(self, object_id):
+        ids = [i[2] for i in self.allowed_files]
+        names = [i[1] for i in self.allowed_files]
+        if str(object_id) in ids:
+            return names[object_id - 1]
 
     def CLI(self):
         print('Файловый менеджер\n')
-        commands = [['1', 'Просмотр директории'], ['2', 'Создать папку']]
+        commands = [['1', 'Просмотр директории'], ['2', 'Создать папку'], ['3', 'Удалить папку'],
+                    ['4', 'Переместиться'], ['5', 'Запись текста в файл'], ['6', 'Просмотр текстового файла']]
         help_page = tabulate((i for i in commands), headers=['ID', 'Метод'], tablefmt='grid', stralign='center')
         print(help_page)
         while True:
@@ -108,6 +113,14 @@ class FileManager:
                 print(self.list_directory()[0])
             if choose == '2':
                 self.create_directory()
+            if choose == '3':
+                self.delete_directory()
+            if choose == '4':
+                self.move_between_directories()
+            if choose == '5':
+                self.create_file()
+            if choose == '6':
+                self.read_file()
             if choose == '9':
                 self.move_files()
             if choose.lower() == 'help':
